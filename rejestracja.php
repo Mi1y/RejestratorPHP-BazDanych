@@ -33,9 +33,27 @@
             $_SESSION['false_haslo']="Haslo nie jest identyczne";
         }
         $haslo_hash = password_hash($haslo1, PASSWORD_DEFAULT);
-        echo $haslo_hash; exit();
+        //echo $haslo_hash; exit();
 
-        
+
+        //akceptacja regulamin
+        if(!isset($_POST['rule']))
+        {
+            $all_right=false;
+            $_SESSION['false_rule']="Potwierdz regulamin"; 
+        }
+
+        //Checking Bot
+        $secret= "6LeEfaQoAAAAAKgCj1pl0wp944BD68tDaR60Gvtw";
+        $check=file_get_contents('https://www.google.com/recaptcha/api/siteverify?secret='.$secret.'&response='.$_POST['g-recaptcha-response']);
+        $answering= json_decode($check);
+        if($answering->success==false)
+        {
+            $all_right=false;
+            $_SESSION['false_check']="Jestes botem?"; 
+        }
+
+
         //  e-mail
         $email =$_POST['email1'];
         $emailV = filter_var($email, FILTER_SANITIZE_EMAIL);
@@ -106,7 +124,22 @@
         <label>
         <input type="checkbox" name="rule"/> Akceptuję regulamin
         </label>
-        <div class="g-recaptcha" data-sitekey="6LeEfaQoAAAAADjt3rdEeUTV9uHX3BWdOP4oWD"></div>
+        <?php
+            if(isset($_SESSION['false_rule']))
+            {
+                echo '<div class="error">'.$_SESSION['false_rule'].'</div>';
+                unset($_SESSION['false_rule']);
+            }
+        ?>
+
+        <div class="g-recaptcha" data-sitekey="6LeEfaQoAAAAADjt3rdEeUTV9_uHX3BWdOP4oWD_"></div>
+        <?php
+            if(isset($_SESSION['false_check']))
+            {
+                echo '<div class="error">'.$_SESSION['false_check'].'</div>';
+                unset($_SESSION['false_check']);
+            }
+        ?>
 
         </br>
         <input type="submit" value="Zarejestruj sie"/>
