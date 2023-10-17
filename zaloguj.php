@@ -1,13 +1,12 @@
 <?php
     session_start();
-    require_once 'connect.php';
 
     if ((!isset($_POST['login'])) || (!isset($_POST['haslo'])))
         {
             header('Location: index.php');
             exit();
         }
-
+    require_once 'connect.php';
     $connecting=@new mysqli($host, $db_user, $db_password, $db_name);
     
     if ($connecting->connect_errno!=0) 

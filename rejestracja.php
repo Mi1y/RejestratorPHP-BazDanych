@@ -35,6 +35,16 @@
         $haslo_hash = password_hash($haslo1, PASSWORD_DEFAULT);
         //echo $haslo_hash; exit();
 
+        //  e-mail
+        $email =$_POST['email1'];
+        $emailV = filter_var($email, FILTER_SANITIZE_EMAIL);
+
+        if((filter_var($emailV, FILTER_VALIDATE_EMAIL)==false) || ($emailV!=$email))
+        {
+            $all_right==false;
+            $_SESSION['false_email']="Podaj poprawny adres e-mail";
+        }
+        echo $emailV; exit();  
 
         //akceptacja regulamin
         if(!isset($_POST['rule']))
@@ -52,25 +62,64 @@
             $all_right=false;
             $_SESSION['false_check']="Jestes botem?"; 
         }
+        require_once "connect.php";
+        mysqli_report(MYSQLI_REPORT_STRICT);
 
-
-        //  e-mail
-        $email =$_POST['email1'];
-        $emailV = filter_var($email, FILTER_SANITIZE_EMAIL);
-
-        if((filter_var($emailV, FILTER_VALIDATE_EMAIL)==false) || ($emailV!=$email))
+        try
         {
-            $all_right==false;
-            $_SESSION['false_email']="Podaj poprawny adres e-mail";
+            $connecting=new mysqli($host, $db_user, $db_password, $db_name);
+            if ($connecting->connect_errno!=0) 
+            {
+                throw new Exception(mysqli_connect_errno());
+            }
+            else
+            {
+                //Czy email istnieje
+                $results = @$connecting->query("SELECT id FROM uzytkownicy WHERE email='$email'");
+
+                if(!$results) throw new Exception($connecting->error);
+                $number_same_email=$results->num_rows;
+                if($number_same_email>0)
+                {
+                    $all_right=false;
+                    $_SESSION['false_email']="Istnieje email"; 
+                }
+                 //Czy user istnieje
+                 $results = @$connecting->query("SELECT id FROM uzytkownicy WHERE email='$login1'");
+
+                 if(!$results) throw new Exception($connecting->error);
+                 $number_same_login1=$results->num_rows;
+                 if($number_same_login1>0)
+                 {
+                     $all_right=false;
+                     $_SESSION['false_login']="Istnieje user"; 
+                 }
+                
+                 if ($all_right==true)
+                 {
+                    if ($connecting->query("INSERT INTO uzytkownicy VALUES (NULL, '$login1','$haslo_hash', '$email', 14)"))
+                    {
+                        $_SESSION['completedregister']=true;
+                        header('Location: welcome.php');
+                    }
+                    else
+                    {
+                        throw new Exception($connecting->error);
+                    }
+                 }
+
+
+                $connecting->close();
+            }
         }
-
-        echo $emailV; exit();
-
-
-        if ($all_right==true)
+        catch(Exception $e)
         {
-            echo "Walidacja udana"; exit();
+            echo '<span style="color:red;"> Blad Serwera! Rejestracja w innym terminie!</span>';
+            /* Informacja o błędów dla developerów
+            echo '</br> Informacja: '.$e;
+            */
         }
+         
     }
 
 
